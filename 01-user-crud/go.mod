@@ -1,4 +1,4 @@
-module main
+module mamfyou
 
 go 1.22.3
 

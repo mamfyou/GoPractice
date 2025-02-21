@@ -1,0 +1,10 @@
+CREATE TABLE users (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    full_name VARCHAR(50) NOT NULL,
+    user_name VARCHAR(50) NOT NULL,
+    is_active BOOLEAN NOT NULL,
+    address VARCHAR(300) NOT NULL,
+    role_c INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL
+);

@@ -1,0 +1,233 @@
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>user: Go Coverage Report</title>
+    <style>
+        body {
+            background: black;
+            color: rgb(80, 80, 80);
+        }
+        body, pre, #legend span {
+            font-family: Menlo, monospace;
+            font-weight: bold;
+        }
+        #topbar {
+            background: black;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 42px;
+            border-bottom: 1px solid rgb(80, 80, 80);
+        }
+        #content {
+            margin-top: 50px;
+        }
+        #nav, #legend {
+            float: left;
+            margin-left: 10px;
+        }
+        #legend {
+            margin-top: 12px;
+        }
+        #nav {
+            margin-top: 10px;
+        }
+        #legend span {
+            margin: 0 5px;
+        }
+        .cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+    </style>
+</head>
+<body>
+    <div id="topbar">
+        <div id="nav">
+            <select id="files">
+            
+            <option value="file0">mamfyou/internal/service/user/user.go (86.0%)</option>
+            
+            </select>
+        </div>
+        <div id="legend">
+            <span>not tracked</span>
+        
+            <span class="cov0">not covered</span>
+            <span class="cov8">covered</span>
+        
+        </div>
+    </div>
+    <div id="content">
+    
+    <pre class="file" id="file0" style="display: block;">package user
+
+import (
+    "errors"
+    "mamfyou/internal/database"
+)
+
+type ValidationError struct {
+    Message string
+}
+
+func (e *ValidationError) Error() string <span class="cov8" title="1">{
+    return e.Message
+}</span>
+
+func NewValidationError(message string) error <span class="cov8" title="1">{
+    return &amp;ValidationError{Message: message}
+}</span>
+
+var ErrorUnexpectedDB error = errors.New("unexpected database errors")
+
+func Insert(user *User) (id int64, err error) <span class="cov8" title="1">{
+    err = validate(user, "POST")
+    if err != nil </span><span class="cov8" title="1">{
+            return 0, err
+    }</span>
+
+    <span class="cov8" title="1">db := database.GetDB()
+    err = db.Create(user).Error
+
+    if err != nil </span><span class="cov0" title="0">{
+            return -1, ErrorUnexpectedDB
+    }</span>
+
+    <span class="cov8" title="1">return user.ID, nil</span>
+}
+
+func Get(id int64) (user *User, err error) <span class="cov8" title="1">{
+    user = &amp;User{ID: id}
+
+    db := database.GetDB()
+    var count int64
+    if err := db.Model(&amp;User{}).Where("id = ?", user.ID).Count(&amp;count).Error; err == nil &amp;&amp; !(count &gt; 0) </span><span class="cov8" title="1">{
+            return user, NewValidationError("user with provided id does not exists")
+    }</span>
+
+    <span class="cov8" title="1">if err := db.Model(&amp;User{}).Where("id = ?", user.ID).First(user).Error; err != nil </span><span class="cov0" title="0">{
+            return nil, err
+    }</span>
+    
+    <span class="cov8" title="1">return user, nil</span>
+}
+
+func Update(user *User) (err error) <span class="cov8" title="1">{
+    err = validate(user, "PUT")
+    if err != nil </span><span class="cov0" title="0">{
+            return err
+    }</span>
+
+    <span class="cov8" title="1">user_old, err := Get(user.ID)
+    if err != nil </span><span class="cov0" title="0">{
+            return err
+    }</span>
+
+    <span class="cov8" title="1">db := database.GetDB()
+
+    err = db.Model(&amp;user_old).Updates(User{FullName: user.FullName, UserName: user.UserName, IsActive: user.IsActive, Address: user.Address, Role: user.Role}).Error
+    if err != nil </span><span class="cov0" title="0">{
+            return ErrorUnexpectedDB
+    }</span>
+
+    <span class="cov8" title="1">return nil</span>
+}
+
+func Delete(id int64) (err error) <span class="cov8" title="1">{
+    validate(&amp;User{ID: id}, "DELETE")
+
+    user, err := Get(id)
+
+    if err != nil </span><span class="cov8" title="1">{
+            return err
+    }</span>
+
+    <span class="cov8" title="1">db := database.GetDB()
+
+    err = db.Delete(&amp;user).Error
+    if err != nil </span><span class="cov0" title="0">{
+            return ErrorUnexpectedDB
+    }</span>
+
+    <span class="cov8" title="1">return nil</span>
+}
+
+// ----- validators -----
+
+func validate(user *User, method string) (err error) <span class="cov8" title="1">{
+    if method != "POST" </span><span class="cov8" title="1">{
+            if user == nil </span><span class="cov0" title="0">{
+                    return NewValidationError("user can not be nil")
+            }</span>
+
+            <span class="cov8" title="1">if user.ID &lt; 1 &amp;&amp; user.ID != 0 </span><span class="cov0" title="0">{
+                    return NewValidationError("user field 'id' can not be less than 1")
+            }</span>
+
+            <span class="cov8" title="1">if _, err := Get(user.ID); err != nil </span><span class="cov8" title="1">{
+                    return NewValidationError("user not exists")
+            }</span>
+    }
+
+    <span class="cov8" title="1">if method != "GET" &amp;&amp; method != "DELETE" </span><span class="cov8" title="1">{
+            db := database.GetDB()
+            var count int64
+            if err := db.Model(&amp;User{}).Where("user_name = ?", user.UserName).Count(&amp;count).Error; err == nil &amp;&amp; count &gt; 0 </span><span class="cov8" title="1">{
+                    return NewValidationError("user with this username already exists")
+            }</span>
+    }
+
+    <span class="cov8" title="1">if user.FullName == "" </span><span class="cov8" title="1">{
+            return NewValidationError("user field 'fullname' can not be empty string")
+    }</span>
+
+    <span class="cov8" title="1">if user.UserName == "" </span><span class="cov8" title="1">{
+            return NewValidationError("user field 'username' can not be empty string")
+    }</span>
+
+    <span class="cov8" title="1">if user.Role &lt;= startRoleType || user.Role &gt;= endRoleType </span><span class="cov8" title="1">{
+            return NewValidationError("invalid value for field 'role'")
+    }</span>
+
+    <span class="cov8" title="1">return nil</span>
+}
+</pre>
+    
+    </div>
+
+<script>
+(function() {
+    var files = document.getElementById('files');
+    var visible;
+    files.addEventListener('change', onChange, false);
+    function select(part) {
+        if (visible)
+            visible.style.display = 'none';
+        visible = document.getElementById(part);
+        if (!visible)
+            return;
+        files.value = part;
+        visible.style.display = 'block';
+        location.hash = part;
+    }
+    function onChange() {
+        select(files.value);
+        window.scrollTo(0, 0);
+    }
+    if (location.hash != "") {
+        select(location.hash.substr(1));
+    }
+    if (!visible) {
+        select("file0");
+    }
+})();
+</script>
+
+</body></html>
